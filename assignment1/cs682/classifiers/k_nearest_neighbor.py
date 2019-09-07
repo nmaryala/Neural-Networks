@@ -128,7 +128,6 @@ class KNearestNeighbor(object):
     first_broadcast_sum = (np.sum( X_squared, axis = 1 )).reshape(num_test,1) + (np.sum( X_train_squared, axis = 1 )).reshape(1, num_train) 
     second_broadcast_sum = first_broadcast_sum - X_into_X_train_twice
     dists = np.sqrt(second_broadcast_sum)
-    print(second_broadcast_sum.shape)
     #########################################################################
     #                         END OF YOUR CODE                              #
     #########################################################################
