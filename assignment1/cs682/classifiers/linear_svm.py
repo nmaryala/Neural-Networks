@@ -20,28 +20,37 @@ def svm_loss_naive(W, X, y, reg):
   - gradient with respect to weights W; an array of same shape as W
   """
   dW = np.zeros(W.shape) # initialize the gradient as zero
-
+  h = 0.00001
   # compute the loss and the gradient
   num_classes = W.shape[1]
   num_train = X.shape[0]
   loss = 0.0
+  loss_h = 0.0
   for i in range(num_train):
     scores = X[i].dot(W)
+    scores_h = X[i].dot(W+ h)
     correct_class_score = scores[y[i]]
+    correct_class_score_h = scores_h[y[i]]
     for j in range(num_classes):
       if j == y[i]:
         continue
       margin = scores[j] - correct_class_score + 1 # note delta = 1
       if margin > 0:
         loss += margin
+      margin_h = scores_h[j] - correct_class_score_h + 1 # note delta = 1
+      if margin_h > 0:
+        loss_h += margin_h
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
   loss /= num_train
+  loss_h /= num_train
 
   # Add regularization to the loss.
   loss += reg * np.sum(W * W)
+  loss_h += reg * np.sum((W+h) * (W+h))
 
+  dW = (loss_h - loss )/h
   #############################################################################
   # TODO:                                                                     #
   # Compute the gradient of the loss function and store it dW.                #
@@ -64,12 +73,23 @@ def svm_loss_vectorized(W, X, y, reg):
   loss = 0.0
   dW = np.zeros(W.shape) # initialize the gradient as zero
 
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
   #############################################################################
   # TODO:                                                                     #
   # Implement a vectorized version of the structured SVM loss, storing the    #
   # result in loss.                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+  actuals = scores[np.arange(num_train), y]
+  diffs = scores.T - actuals + 1
+  diffs[np.where(diffs < 0)] = 0
+  diffSum = np.sum(diffs)
+  loss = (diffSum - 500)/500 #Subtracting the difference of 1 from each example for its own class.
+
+  # diffs = scores -
+  # margin = np.sum(max(0, scores - y))
+
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
