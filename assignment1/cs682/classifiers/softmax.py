@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from random import shuffle
 
 def softmax_loss_naive(W, X, y, reg):
@@ -29,7 +30,40 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+  loss = 0.0
+  for i in range(num_train):
+    scores = X[i].dot(W)
+    #To remove numeric instability where there is a possibility of overflow,
+    #we subtract maximum of the scores from each row
+    scores = scores - np.max(scores) 
+    correct_class_index = y[i]
+    scores_e = np.exp(scores)
+    scores_sum = np.sum(scores_e)
+    loss += -1 * math.log(scores_e[correct_class_index]/scores_sum)
+
+    for j in range(num_classes):
+      if j != y[i]:
+        dW[:,j] +=  (X[i] * scores_e[j]) / scores_sum
+
+    dW[:,correct_class_index] += -1 * X[i]
+
+
+    
+  # Right now the loss is a sum over all training examples, but we want it
+  # to be an average instead so we divide by num_train.
+  loss /= num_train
+
+  # Add regularization to the loss.
+  loss += reg * np.sum(W * W)
+
+  #Averaging dW over all the training examples
+  dW /= num_train
+
+  #Adding regularization to dW
+  dW += 2 * reg * W
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
