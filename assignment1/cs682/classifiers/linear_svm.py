@@ -88,6 +88,8 @@ def svm_loss_vectorized(W, X, y, reg):
   diffs[np.where(diffs < 0)] = 0
   diffSum = np.sum(diffs)
   loss = (diffSum - num_train)/num_train #Subtracting the difference of 1 from each example for its own class.
+  # Add regularization to the loss.
+  loss += reg * np.sum(W * W)
 
   #############################################################################
   #                             END OF YOUR CODE                              #

@@ -98,12 +98,16 @@ def softmax_loss_vectorized(W, X, y, reg):
   ratios = np.log(np.divide(actuals, scores_sum))
   loss = -1 * np.sum(ratios)
   loss = loss/num_train
+  # Add regularization to the loss.
+  loss += reg * np.sum(W * W)
 
 
   scores_divided = (np.divide(scores_e.T, scores_sum)).T
   scores_divided[np.arange(num_train), y] -= 1
   dW = X.T.dot(scores_divided)
   dW = dW/num_train
+  #Adding regularization to dW
+  dW += 2 * reg * W
   
   #############################################################################
   #                          END OF YOUR CODE                                 #
