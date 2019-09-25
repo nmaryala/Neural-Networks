@@ -101,8 +101,7 @@ class TwoLayerNet(object):
     scores_e = np.exp(scores)
     actuals = scores_e[np.arange(num_train), y] 
     scores_sum = np.sum(scores_e, axis = 1)
-    scores_exp = np.divide(scores_e.T, scores_sum).T
-    scores_actual_exp = scores_exp[np.arange(num_train), y]
+    scores_actual_exp = np.divide(actuals.T, scores_sum)
     ratios = np.log(scores_actual_exp)
     loss_intermediate = -1 * np.sum(ratios)/num_train
     reg_loss = reg * np.sum(W1 * W1) +  reg * np.sum(W2 * W2)
