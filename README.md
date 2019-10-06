@@ -14,3 +14,7 @@ Following are the classifieres implemented till date.
  6. Training using higher level image features
  7. Data set used is CIFAR-10
  
+ ### Optimizations used:
+ 1. Batch Normalization
+ 2. Data pre-processing
+ 
