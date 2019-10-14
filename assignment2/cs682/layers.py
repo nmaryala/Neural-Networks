@@ -368,6 +368,7 @@ def layernorm_forward(x, gamma, beta, ln_param):
     """
     out, cache = None, None
     eps = ln_param.get('eps', 1e-5)
+    N, D = x.shape
     ###########################################################################
     # TODO: Implement the training-time forward pass for layer norm.          #
     # Normalize the incoming data, and scale and  shift the normalized data   #
@@ -378,7 +379,34 @@ def layernorm_forward(x, gamma, beta, ln_param):
     # transformations you could perform, that would enable you to copy over   #
     # the batch norm code and leave it almost unchanged?                      #
     ###########################################################################
-    pass
+    #Step1
+    sample_mean = np.mean(x, axis = 0)
+
+    #step2
+    x_mean_removed = (x - sample_mean)
+
+    #Step3
+    x_mean_squared = x_mean_removed ** 2
+
+    #step4
+    sample_var = np.sum(x_mean_squared, axis=0)/ N
+
+    #step5
+    std = np.sqrt(sample_var + eps)
+
+    #step6
+    istd = 1/std
+
+    #step7
+    normalized_x = istd*x_mean_removed
+
+    #step8
+    shifted_x = normalized_x*gamma
+
+    #step9
+    out = shifted_x + beta
+
+    cache = (x, sample_mean, x_mean_removed, x_mean_squared, sample_var, std, istd, normalized_x, shifted_x, gamma, beta, eps)    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -402,6 +430,8 @@ def layernorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter beta, of shape (D,)
     """
     dx, dgamma, dbeta = None, None, None
+    (x, sample_mean, x_mean_removed, x_mean_squared, sample_var, std, istd, normalized_x, shifted_x, gamma, beta, eps) = cache
+    N, D = x.shape
     ###########################################################################
     # TODO: Implement the backward pass for layer norm.                       #
     #                                                                         #
@@ -409,7 +439,10 @@ def layernorm_backward(dout, cache):
     # implementation of batch normalization. The hints to the forward pass    #
     # still apply!                                                            #
     ###########################################################################
-    pass
+    dbeta = np.sum(dout, axis = 0)
+    dgamma = np.sum(normalized_x*dout, axis = 0)
+
+    dx = gamma * (dout - dbeta / N - normalized_x * dgamma / N) / std
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
