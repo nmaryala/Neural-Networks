@@ -442,10 +442,17 @@ def layernorm_backward(dout, cache):
     # implementation of batch normalization. The hints to the forward pass    #
     # still apply!                                                            #
     ###########################################################################
+    normalized_x = normalized_x.T
     dbeta = np.sum(dout, axis = 0)
     dgamma = np.sum(normalized_x*dout, axis = 0)
 
-    dx = gamma * (dout - dbeta / N - normalized_x * dgamma / N) / std
+
+    d_normalized_x = dout * gamma
+    d_sample_var = np.sum(d_normalized_x.T * (x.T - sample_mean), axis=0) * (-0.5) * (sample_var + eps) ** -1.5
+    d_sample_mean = -1 * np.sum(d_normalized_x.T, axis=0) / (np.sqrt(sample_var + eps)) + d_sample_var * (
+        np.sum(-2 * (x.T - sample_mean), axis=0)) / x.T.shape[0]
+    d_x = d_normalized_x.T / np.sqrt(sample_var + eps) + d_sample_var * (2 * (x.T - sample_mean)) / x.T.shape[0] + d_sample_mean / x.T.shape[0]
+    dx = d_x.T
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -861,7 +868,7 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     out = out * gamma + beta
 
     x = x.reshape(N, C, H, W)
-    cache = (x, gamma, sample_mean, var, x_normalized, G)
+    cache = (x, gamma, sample_mean, var, x_normalized, G, eps)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -882,7 +889,7 @@ def spatial_groupnorm_backward(dout, cache):
     - dbeta: Gradient with respect to shift parameter, of shape (C,)
     """
     dx, dgamma, dbeta = None, None, None
-    (x, gamma, sample_mean, var, normalized_x, G) = cache
+    (x, gamma, sample_mean, sample_var, normalized_x, G, eps) = cache
     (N, C, H, W) = x.shape
 
     ###########################################################################
@@ -891,11 +898,17 @@ def spatial_groupnorm_backward(dout, cache):
     ###########################################################################
     dbeta = np.sum(dout,  axis=(0,2,3)).reshape((1,C,1,1))
     dgamma = np.sum(normalized_x.reshape(N, C, H, W)*dout, axis=(0,2,3)).reshape((1,C,1,1))
-
-
+    normalized_x = normalized_x.reshape(N, C, H, W)
+    x = x.reshape(N* G, C // G, H, W)
+    
     ##Need to complete this part
-    dx = dout
+    d_normalized_x = dout * gamma
+    d_normalized_x = d_normalized_x.reshape(N* G, C // G, H, W)
+    d_sample_var = np.sum(d_normalized_x * (x - sample_mean), axis=0) * (-0.5) * (sample_var + eps) ** -1.5
+    d_sample_mean = -1 * np.sum(d_normalized_x, axis=0) / (np.sqrt(sample_var + eps)) + d_sample_var * (np.sum(-2 * (x - sample_mean), axis=0)) / x.shape[0]
+    d_x = d_normalized_x / np.sqrt(sample_var + eps) + d_sample_var * (2 * (x - sample_mean)) / x.shape[0] + d_sample_mean / x.shape[0]
 
+    dx = d_x.reshape(dout.shape)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
